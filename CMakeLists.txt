@@ -18,12 +18,12 @@ else()
 endif()
 
 # Qt6 - fallback to Qt5
-find_package(Qt6 COMPONENTS Core Widgets Gui Charts Svg PrintSupport QUIET)
+find_package(Qt6 COMPONENTS Core Widgets Gui Charts Svg PrintSupport Network QUIET)
 if(Qt6_FOUND)
     set(QT_VERSION_MAJOR 6)
     message(STATUS "Using Qt6")
 else()
-    find_package(Qt5 COMPONENTS Core Widgets Gui Charts Svg PrintSupport REQUIRED)
+    find_package(Qt5 COMPONENTS Core Widgets Gui Charts Svg PrintSupport Network REQUIRED)
     set(QT_VERSION_MAJOR 5)
     message(STATUS "Using Qt5")
 endif()
@@ -57,10 +57,10 @@ add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS} ${RESOURCES})
 
 if(Qt6_FOUND)
     target_link_libraries(${PROJECT_NAME}
-        Qt6::Core Qt6::Widgets Qt6::Gui Qt6::Charts Qt6::Svg Qt6::PrintSupport)
+        Qt6::Core Qt6::Widgets Qt6::Gui Qt6::Charts Qt6::Svg Qt6::PrintSupport Qt6::Network)
 else()
     target_link_libraries(${PROJECT_NAME}
-        Qt5::Core Qt5::Widgets Qt5::Gui Qt5::Charts Qt5::Svg Qt5::PrintSupport)
+        Qt5::Core Qt5::Widgets Qt5::Gui Qt5::Charts Qt5::Svg Qt5::PrintSupport Qt5::Network)
 endif()
 
 # Install
