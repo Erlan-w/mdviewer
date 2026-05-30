@@ -10,7 +10,14 @@
 #include <QApplication>
 #include <QScreen>
 
-// ─── ZoomableLabel ────────────────────────────────────────────────────────────
+// Helper macro untuk kompatibilitas Qt 5 dan Qt 6
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    #define GET_GLOBAL_POS(event) (event)->globalPosition().toPoint()
+#else
+    #define GET_GLOBAL_POS(event) (event)->globalPos()
+#endif
+
+// ─── ZoomableLabel ────────────────────────────────────────────────────────
 ZoomableLabel::ZoomableLabel(QWidget *parent) : QLabel(parent) {
     setAlignment(Qt::AlignCenter);
     setMouseTracking(true);
@@ -47,15 +54,15 @@ void ZoomableLabel::wheelEvent(QWheelEvent *e) {
 void ZoomableLabel::mousePressEvent(QMouseEvent *e) {
     if (e->button() == Qt::LeftButton) {
         m_dragging = true;
-        m_lastPos = e->globalPos();  // Changed from e->globalPosition().toPoint()
+        m_lastPos = GET_GLOBAL_POS(e);  // Compatible dengan Qt 5 & Qt 6
         setCursor(Qt::ClosedHandCursor);
     }
 }
 
 void ZoomableLabel::mouseMoveEvent(QMouseEvent *e) {
     if (!m_dragging) return;
-    QPoint delta = e->globalPos() - m_lastPos;  // Changed from e->globalPosition().toPoint()
-    m_lastPos = e->globalPos();  // Changed from e->globalPosition().toPoint()
+    QPoint delta = GET_GLOBAL_POS(e) - m_lastPos;  // Compatible dengan Qt 5 & Qt 6
+    m_lastPos = GET_GLOBAL_POS(e);  // Compatible dengan Qt 5 & Qt 6
     if (auto sa = qobject_cast<QScrollArea*>(parent() ? parent()->parent() : nullptr)) {
         sa->horizontalScrollBar()->setValue(sa->horizontalScrollBar()->value() - delta.x());
         sa->verticalScrollBar()->setValue(sa->verticalScrollBar()->value() - delta.y());
@@ -73,6 +80,7 @@ void ZoomableLabel::paintEvent(QPaintEvent *e) {
     QLabel::paintEvent(e);
 }
 
+// Rest of the ImageViewer implementation...
 // ─── ImageViewer ─────────────────────────────────────────────────────────────
 ImageViewer::ImageViewer(const QPixmap &px, const QString &title, QWidget *parent)
     : QDialog(parent, Qt::Window | Qt::FramelessWindowHint)
