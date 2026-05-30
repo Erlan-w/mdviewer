@@ -67,7 +67,7 @@ jobs:
       - name: Install Qt6 via aqt
         run: |
           aqt install-qt windows desktop 6.5.3 win64_msvc2019_64 `
-            --modules qtcharts qtsvg `
+            --modules qtcharts`
             --outputdir C:\Qt
         shell: pwsh
 
