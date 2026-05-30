@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  # ─── Linux Build ───────────────────────────────────────────────────────────
+  # ─── Linux Build ──────────────────────────────────────────────────────────
   build-linux:
     name: Linux (Qt6, GCC)
     runs-on: ubuntu-22.04
@@ -48,7 +48,7 @@ jobs:
           path: build/MarkdownViewer
           retention-days: 14
 
-  # ─── Windows Build (Qt via aqtinstall) ─────────────────────────────────────
+  # ─── Windows Build (Qt via aqtinstall) ────────────────────────────────────
   build-windows:
     name: Windows (Qt6, MSVC)
     runs-on: windows-2022
@@ -68,7 +68,7 @@ jobs:
       - name: Install Qt6 via aqt
         run: |
           aqt install-qt windows desktop 6.5.3 win64_msvc2019_64 `
-            --modules qtcharts`
+            --modules qtcharts `
             --outputdir C:\Qt
         shell: pwsh
 
@@ -110,7 +110,7 @@ jobs:
           path: deploy\
           retention-days: 14
 
-  # ─── Release ───────────────────────────────────────────────────────────────
+  # ─── Release ──────────────────────────────────────────────────────────────
   release:
     name: Create Release
     needs: [ build-linux, build-windows ]
