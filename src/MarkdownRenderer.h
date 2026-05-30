@@ -3,6 +3,7 @@
 #include <QWidget>
 #include <QScrollArea>
 #include <QVBoxLayout>
+#include <QLabel>          // ADD THIS LINE
 #include <QMap>
 #include <QNetworkAccessManager>
 #include <QCache>
