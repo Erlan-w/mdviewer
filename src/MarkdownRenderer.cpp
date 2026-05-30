@@ -525,7 +525,7 @@ QString MarkdownRenderer::highlightCode(const QString &code, const QString &lang
     QString result = code;
     // We work on a "marked" version to avoid double-replacing
     // Use a placeholder approach
-    struct Span { int start, end; QString cls; };
+    struct Span { qsizetype start, end; QString cls; }; 
     QVector<Span> spans;
 
     for (const auto &rule : rules) {
@@ -543,8 +543,8 @@ QString MarkdownRenderer::highlightCode(const QString &code, const QString &lang
     }
     std::sort(spans.begin(), spans.end(), [](const Span &a, const Span &b){ return a.start < b.start; });
 
-    QString out;
-    int pos = 0;
+   QString out;
+    qsizetype pos = 0;  // Changed from int to qsizetype
     for (const auto &sp : spans) {
         out += code.mid(pos, sp.start - pos);
         out += QString("<span class='%1'>%2</span>")
