@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/">
+        <!-- No bundled resources needed; fonts loaded from system -->
+    </qresource>
+</RCC>
