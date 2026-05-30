@@ -438,7 +438,7 @@ void MarkdownRenderer::fetchImage(const QString &url, QLabel *label) {
                     displayError = "Connection refused";
                 } else if (reply->error() == QNetworkReply::TimeoutError) {
                     displayError = "Request timeout";
-                } else if (reply->error() == QNetworkReply::NotFoundError) {
+                } if (reply->error() == QNetworkReply::ContentNotFoundError) {
                     displayError = "Image not found (404)";
                 } else if (reply->error() == QNetworkReply::ProtocolUnknownError) {
                     displayError = "Invalid URL";
