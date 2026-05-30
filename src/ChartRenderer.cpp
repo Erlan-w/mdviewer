@@ -55,7 +55,7 @@ void ChartWidget::buildBar(QChart *c, const QVariantMap &d) {
 
     QList<qreal> nums;
     for (auto &v : vals) { bool ok; double x = v.trimmed().toDouble(&ok); if(ok) nums << x; }
-    *set << nums;
+    for (qreal val : nums) { *set << val; }  // ADD THIS LOOP
     series->append(set);
     c->addSeries(series);
 
