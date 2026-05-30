@@ -467,6 +467,7 @@ void MarkdownRenderer::fetchImage(const QString &url, QLabel *label) {
         
         // ✅ Success path
         m_imageCache.insert(url, new QPixmap(px));
+        if (!label) return;
         label->setPixmap(px.scaled(qMin(px.width(), 800), qMin(px.height(), 600),
             Qt::KeepAspectRatio, Qt::SmoothTransformation));
         label->setFixedHeight(qMin(px.height(), 600) + 8);
@@ -555,7 +556,7 @@ QString MarkdownRenderer::highlightCode(const QString &code, const QString &lang
             { QRegularExpression(R"(//[^\n]*)"),                                   "cmt" },
             { QRegularExpression(R"(/\*[\s\S]*?\*/)"),                             "cmt" },
             { QRegularExpression(R"("[^"\\]*(?:\\.[^"\\]*)*")"),                   "str" },
-            { QRegularExpression(R"(\b(int|float|double|char|void|bool|auto|const|static|struct|class|namespace|template|typename|return|if|else|for|while|do|switch|case|break|continue|new|delete|operator)\b)"), "kw" },
+            { QRegularExpression(R"(\b(int|float|double|char|void|bool|auto|const|static|struct|class|namespace|template|typename|return|if|else|for|while|do|switch|case|break|continue|new|delete|nullptr|true|false|include|define|ifdef|ifndef|endif|using|public|private|protected|virtual|override|operator)\b)"), "kw" },
             { QRegularExpression(R"(\b[A-Z][a-zA-Z0-9_]*\b)"),                    "ty"  },
             { QRegularExpression(R"(\b\d+\.?\d*[fFlLuU]*\b)"),                    "num" },
         };
@@ -564,7 +565,7 @@ QString MarkdownRenderer::highlightCode(const QString &code, const QString &lang
             { QRegularExpression(R"(//[^\n]*)"),                                   "cmt" },
             { QRegularExpression(R"(`[^`]*`)"),                                    "str" },
             { QRegularExpression(R"("[^"\\]*(?:\\.[^"\\]*)*"|'[^'\\]*(?:\\.[^'\\]*)*')"), "str" },
-            { QRegularExpression(R"(\b(const|let|var|function|class|if|else|for|while|return|import|export|from|default|async|await|try|catch|finally|new|delete|typeof|instanceof|null|undefined|true|false)\b)"), "kw" },
+            { QRegularExpression(R"(\b(const|let|var|function|class|if|else|for|while|return|import|export|from|default|async|await|try|catch|finally|new|delete|typeof|instanceof|null|undefined|true|false|this|super|extends|implements|interface|type|enum)\b)"), "kw" },
             { QRegularExpression(R"(\b\d+\.?\d*\b)"),                             "num" },
         };
     } else {
