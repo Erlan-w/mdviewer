@@ -23,7 +23,7 @@
 #include <QBuffer>
 #include <QTimer>
 
-// ─── Constructor ──────────────────────────────────────────────────────────────
+// ─── Constructor ─────────────────────────────────────────────────────────[...]
 MarkdownRenderer::MarkdownRenderer(QWidget *parent)
     : QScrollArea(parent)
     , m_imageCache(50 * 1024 * 1024) // 50 MB cache
@@ -54,7 +54,7 @@ MarkdownRenderer::MarkdownRenderer(QWidget *parent)
 
 MarkdownRenderer::~MarkdownRenderer() = default;
 
-// ─── Render ───────────────────────────────────────────────────────────────────
+// ─── Render ────────────────────────────────────────────────────────────[...]
 void MarkdownRenderer::render(const MarkdownNode::Ptr &doc) {
     clearWidgets();
     if (!doc) return;
@@ -92,7 +92,7 @@ void MarkdownRenderer::buildBlock(const MarkdownNode::Ptr &node) {
     }
 }
 
-// ─── Heading ──────────────────────────────────────────────────────────────────
+// ─── Heading ──────────────────────────────────────────────────────────–[...]
 QWidget* MarkdownRenderer::buildHeading(const MarkdownNode::Ptr &node) {
     const auto &th = ThemeManager::instance().theme();
     auto *bw = new BlockWidget(m_container);
@@ -133,7 +133,7 @@ QWidget* MarkdownRenderer::buildHeading(const MarkdownNode::Ptr &node) {
     return bw;
 }
 
-// ─── Paragraph ────────────────────────────────────────────────────────────────
+// ─── Paragraph ─────────────────────────────────────────────────────────–[...]
 QWidget* MarkdownRenderer::buildParagraph(const MarkdownNode::Ptr &node) {
     const auto &th = ThemeManager::instance().theme();
 
@@ -153,7 +153,7 @@ QWidget* MarkdownRenderer::buildParagraph(const MarkdownNode::Ptr &node) {
     return lbl;
 }
 
-// ─── Code Block ───────────────────────────────────────────────────────────────
+// ─── Code Block ─────────────────────────────────────────────────────────[...]
 QWidget* MarkdownRenderer::buildCodeBlock(const MarkdownNode::Ptr &node) {
     const auto &th = ThemeManager::instance().theme();
 
@@ -212,7 +212,7 @@ QWidget* MarkdownRenderer::buildCodeBlock(const MarkdownNode::Ptr &node) {
     return frame;
 }
 
-// ─── BlockQuote ───────────────────────────────────────────────────────────────
+// ─── BlockQuote ─────────────────────────────────────────────────────────[...]
 QWidget* MarkdownRenderer::buildBlockQuote(const MarkdownNode::Ptr &node) {
     const auto &th = ThemeManager::instance().theme();
     auto *frame = new QWidget(m_container);
@@ -249,7 +249,7 @@ QWidget* MarkdownRenderer::buildBlockQuote(const MarkdownNode::Ptr &node) {
     return frame;
 }
 
-// ─── List ─────────────────────────────────────────────────────────────────────
+// ─── List ───────────────────────────────────────────────────────────[...]
 QWidget* MarkdownRenderer::buildList(const MarkdownNode::Ptr &node, int depth) {
     const auto &th = ThemeManager::instance().theme();
     auto *frame = new QWidget(m_container);
@@ -284,7 +284,7 @@ QWidget* MarkdownRenderer::buildList(const MarkdownNode::Ptr &node, int depth) {
     return frame;
 }
 
-// ─── Table ────────────────────────────────────────────────────────────────────
+// ─── Table ──────────────────────────────────────────────────────────–[...]
 QWidget* MarkdownRenderer::buildTable(const MarkdownNode::Ptr &node) {
     const auto &th = ThemeManager::instance().theme();
     auto *frame = new QWidget(m_container);
@@ -325,7 +325,7 @@ QWidget* MarkdownRenderer::buildTable(const MarkdownNode::Ptr &node) {
     return frame;
 }
 
-// ─── HRule ────────────────────────────────────────────────────────────────────
+// ─── HRule ──────────────────────────────────────────────────────────–[...]
 QWidget* MarkdownRenderer::buildHRule() {
     const auto &th = ThemeManager::instance().theme();
     auto *sep = new QFrame(m_container);
@@ -336,7 +336,7 @@ QWidget* MarkdownRenderer::buildHRule() {
     return sep;
 }
 
-// ─── Image ────────────────────────────────────────────────────────────────────
+// ─── Image ──────────────────────────────────────────────────────────–[...]
 QWidget* MarkdownRenderer::buildImage(const MarkdownNode::Ptr &node) {
     const auto &th = ThemeManager::instance().theme();
     auto *frame = new QWidget(m_container);
@@ -401,6 +401,15 @@ void MarkdownRenderer::fetchImage(const QString &url, QLabel *label) {
                 label->setProperty("pixmap_url", url);
                 return;
             }
+        } else {
+            // ✅ FIX: Show error for local file not found or invalid format
+            if (label) {
+                const auto &th = ThemeManager::instance().theme();
+                label->setText(QString("<span style='color:%1;font-size:12px;'>❌ Cannot load<br/>%2</span>")
+                    .arg(th.textMuted.name(), path));
+                label->setFixedHeight(50);
+            }
+            return;
         }
     }
 
@@ -408,13 +417,55 @@ void MarkdownRenderer::fetchImage(const QString &url, QLabel *label) {
     QNetworkRequest req(qurl);
     req.setAttribute(QNetworkRequest::RedirectPolicyAttribute,
                      QNetworkRequest::NoLessSafeRedirectPolicy);
+    // ✅ FIX: Add timeout
+    req.setTransferTimeout(10000); // 10 seconds timeout
+    
     auto *reply = m_net->get(req);
+    
+    // Capture label as weak reference to prevent use-after-delete
     connect(reply, &QNetworkReply::finished, this, [this, reply, label, url](){
         reply->deleteLater();
-        if (reply->error() != QNetworkReply::NoError) return;
+        
+        // ✅ FIX: Explicit error handling
+        if (reply->error() != QNetworkReply::NoError) {
+            if (label) {
+                const auto &th = ThemeManager::instance().theme();
+                QString errorMsg = reply->errorString();
+                QString displayError = errorMsg;
+                
+                // Map common errors to user-friendly messages
+                if (reply->error() == QNetworkReply::ConnectionRefusedError) {
+                    displayError = "Connection refused";
+                } else if (reply->error() == QNetworkReply::TimeoutError) {
+                    displayError = "Request timeout";
+                } if (reply->error() == QNetworkReply::ContentNotFoundError) {
+                    displayError = "Image not found (404)";
+                } else if (reply->error() == QNetworkReply::ProtocolUnknownError) {
+                    displayError = "Invalid URL";
+                }
+                
+                label->setText(QString("<span style='color:%1;font-size:12px;'>❌ Failed<br/>%2</span>")
+                    .arg(th.textMuted.name(), displayError));
+                label->setFixedHeight(50);
+            }
+            return;
+        }
+        
+        if (!label) return;  // ✅ Safety check: label might be deleted
+        
         QByteArray data = reply->readAll();
         QPixmap px;
-        if (!px.loadFromData(data)) return;
+        
+        // ✅ FIX: Handle failed image load
+        if (!px.loadFromData(data)) {
+            const auto &th = ThemeManager::instance().theme();
+            label->setText(QString("<span style='color:%1;font-size:12px;'>⚠️ Invalid format<br/>%2</span>")
+                .arg(th.textMuted.name(), url));
+            label->setFixedHeight(50);
+            return;
+        }
+        
+        // ✅ Success path
         m_imageCache.insert(url, new QPixmap(px));
         if (!label) return;
         label->setPixmap(px.scaled(qMin(px.width(), 800), qMin(px.height(), 600),
@@ -426,7 +477,7 @@ void MarkdownRenderer::fetchImage(const QString &url, QLabel *label) {
     });
 }
 
-// ─── Chart ────────────────────────────────────────────────────────────────────
+// ─── Chart ──────────────────────────────────────────────────────────–[...]
 ChartWidget* MarkdownRenderer::buildChart(const MarkdownNode::Ptr &node) {
     auto *cw = new ChartWidget(node->chartData, m_container);
     connect(cw, &ChartWidget::clicked, this, [this, cw, node](){
@@ -438,7 +489,7 @@ ChartWidget* MarkdownRenderer::buildChart(const MarkdownNode::Ptr &node) {
     return cw;
 }
 
-// ─── Inline HTML ─────────────────────────────────────────────────────────────
+// ─── Inline HTML ────────────────────────────────────────────────────────–[...]
 QString MarkdownRenderer::inlineToHtml(const QVector<MarkdownNode::Ptr> &nodes) {
     QString html;
     for (const auto &n : nodes) html += nodeToHtml(n);
@@ -505,7 +556,7 @@ QString MarkdownRenderer::highlightCode(const QString &code, const QString &lang
             { QRegularExpression(R"(//[^\n]*)"),                                   "cmt" },
             { QRegularExpression(R"(/\*[\s\S]*?\*/)"),                             "cmt" },
             { QRegularExpression(R"("[^"\\]*(?:\\.[^"\\]*)*")"),                   "str" },
-            { QRegularExpression(R"(\b(int|float|double|char|void|bool|auto|const|static|struct|class|namespace|template|typename|return|if|else|for|while|do|switch|case|break|continue|new|delete|nullptr|true|false|include|define|ifdef|ifndef|endif|using|public|private|protected|virtual|override)\b)"), "kw" },
+            { QRegularExpression(R"(\b(int|float|double|char|void|bool|auto|const|static|struct|class|namespace|template|typename|return|if|else|for|while|do|switch|case|break|continue|new|delete|nullptr|true|false|include|define|ifdef|ifndef|endif|using|public|private|protected|virtual|override|operator)\b)"), "kw" },
             { QRegularExpression(R"(\b[A-Z][a-zA-Z0-9_]*\b)"),                    "ty"  },
             { QRegularExpression(R"(\b\d+\.?\d*[fFlLuU]*\b)"),                    "num" },
         };
@@ -555,7 +606,7 @@ QString MarkdownRenderer::highlightCode(const QString &code, const QString &lang
     return out;
 }
 
-// ─── Anchor scroll ────────────────────────────────────────────────────────────
+// ─── Anchor scroll ────────────────────────────────────────────────────────–[...]
 void MarkdownRenderer::scrollToAnchor(const QString &anchor) {
     if (!m_anchorMap.contains(anchor)) return;
     BlockWidget *bw = m_anchorMap[anchor];
