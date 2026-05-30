@@ -47,15 +47,15 @@ void ZoomableLabel::wheelEvent(QWheelEvent *e) {
 void ZoomableLabel::mousePressEvent(QMouseEvent *e) {
     if (e->button() == Qt::LeftButton) {
         m_dragging = true;
-        m_lastPos  = e->globalPos();
+        m_lastPos = e->globalPosition().toPoint();
         setCursor(Qt::ClosedHandCursor);
     }
 }
 
 void ZoomableLabel::mouseMoveEvent(QMouseEvent *e) {
     if (!m_dragging) return;
-    QPoint delta = e->globalPos() - m_lastPos;
-    m_lastPos = e->globalPos();
+    QPoint delta = e->globalPosition().toPoint() - m_lastPos;
+    m_lastPos = e->globalPosition().toPoint();
     if (auto sa = qobject_cast<QScrollArea*>(parent() ? parent()->parent() : nullptr)) {
         sa->horizontalScrollBar()->setValue(sa->horizontalScrollBar()->value() - delta.x());
         sa->verticalScrollBar()->setValue(sa->verticalScrollBar()->value() - delta.y());
